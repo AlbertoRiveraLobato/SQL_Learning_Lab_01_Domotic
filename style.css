@@ -1,0 +1,78 @@
+/* style.css - Estilos básicos para la aplicación domótica. 
+   Puedes personalizar colores, tamaños y disposición.
+*/
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f5f5f5;
+    margin: 0;
+    padding: 0 1em;
+}
+
+h1 {
+    text-align: center;
+    margin-top: 1em;
+}
+
+#house-plan {
+    margin: 2em auto;
+    display: flex;
+    justify-content: space-around;
+    max-width: 600px;
+}
+
+.room {
+    background: #e0ecff;
+    border: 2px solid #6a8eb5;
+    border-radius: 8px;
+    width: 120px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 0.5em;
+    font-weight: bold;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.room:hover {
+    background: #b3d0fa;
+}
+
+#sensors-status {
+    margin: 2em auto;
+    max-width: 700px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px #ccc;
+    padding: 1em;
+}
+
+#sql-console {
+    margin: 2em auto;
+    max-width: 700px;
+    padding: 1em;
+    background: #eef8ee;
+    border-radius: 8px;
+    border: 1px solid #94c794;
+}
+
+textarea {
+    width: 95%;
+    font-family: monospace;
+    font-size: 1em;
+}
+button {
+    margin: 0.5em 0.5em 0.5em 0;
+    padding: 0.5em 1.2em;
+    border-radius: 5px;
+    border: none;
+    background: #6a8eb5;
+    color: #fff;
+    cursor: pointer;
+    font-size: 1em;
+}
+button:hover {
+    background: #406080;
+}
