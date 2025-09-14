@@ -49,6 +49,41 @@ h1 {
     padding: 1em;
 }
 
+#db-schema {
+    margin: 2em auto;
+    max-width: 700px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px #ccc;
+    padding: 1em;
+    border: 1px solid #d0d0d0;
+}
+
+#db-schema .table-info {
+    margin-bottom: 1.5em;
+    background: #fff;
+    border-radius: 5px;
+    padding: 1em;
+    border: 1px solid #e0e0e0;
+}
+
+#db-schema .table-name {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #2c5aa0;
+    margin-bottom: 0.5em;
+}
+
+#db-schema .column-list {
+    margin-left: 1em;
+}
+
+#db-schema .column-item {
+    font-family: monospace;
+    color: #555;
+    margin-bottom: 0.2em;
+}
+
 #sql-console {
     margin: 2em auto;
     max-width: 700px;
