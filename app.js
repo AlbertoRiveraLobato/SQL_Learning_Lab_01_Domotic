@@ -1,5 +1,5 @@
 // Configuración de versión
-const APP_VERSION = "v21";
+const APP_VERSION = "v22";
 
 let db, ready = false;
 let SQL;
@@ -92,21 +92,42 @@ function printError(msg) {
 
 // Ejecutar SQL y mostrar resultados
 async function ejecutarSQL(sql) {
-    if (!ready || !db) {
-        printError("La base de datos no está lista. Por favor, inicialice o espere.");
+    if (!SQL) {
+        printError("La librería SQL.js aún no está lista.");
         return;
     }
+    
+    // Si no hay una base de datos o se está ejecutando código de inicialización, crear una nueva BD
+    if (!db || !ready) {
+        db = new SQL.Database();
+        ready = true;
+    }
+    
     try {
-        const rows = db.exec(sql)[0]?.values || [];
-        const columns = db.exec(sql)[0]?.columns || [];
-        // Formatear como array de objetos
-        let data = [];
-        rows.forEach(row => {
-            let obj = {};
-            columns.forEach((col, i) => obj[col] = row[i]);
-            data.push(obj);
-        });
-        printResult(data);
+        const results = db.exec(sql);
+        
+        // Si hay resultados, mostrarlos
+        if (results.length > 0 && results[0].values.length > 0) {
+            const rows = results[0].values || [];
+            const columns = results[0].columns || [];
+            // Formatear como array de objetos
+            let data = [];
+            rows.forEach(row => {
+                let obj = {};
+                columns.forEach((col, i) => obj[col] = row[i]);
+                data.push(obj);
+            });
+            printResult(data);
+        } else {
+            // Si no hay resultados pero la consulta fue exitosa
+            output.innerHTML = "<pre style='color: green;'>Consulta ejecutada correctamente.</pre>";
+        }
+        
+        // Si parece que se ejecutó una inicialización, cargar las habitaciones
+        if (sql.includes('CREATE TABLE') && sql.includes('habitaciones')) {
+            cargarRooms();
+        }
+        
     } catch (e) {
         printError(e.message);
     }
@@ -118,11 +139,9 @@ function inicializarDB() {
         printError("La librería SQL.js aún no está lista.");
         return;
     }
-    db = new SQL.Database();
-    db.exec(initSQL);
-    ready = true;
-    output.innerHTML = `<pre style="color: green;">Base de datos inicializada correctamente. Listo para ejecutar consultas.</pre>`;
-    cargarRooms();
+    // Pegar el código SQL en el textarea para que el usuario pueda editarlo o ejecutarlo
+    sqlInput.value = initSQL.trim();
+    output.innerHTML = `<pre style="color: green;">Código SQL de inicialización cargado en el editor. Puedes editarlo y luego pulsar 'Ejecutar' para crear la base de datos.</pre>`;
 }
 
 // Borrar la base de datos
@@ -165,6 +184,10 @@ document.getElementById('btnBorrar').addEventListener('click', () => {
     output.innerHTML = '';
     const helpBox = document.querySelector('.help-box');
     if (helpBox) helpBox.remove();
+});
+document.getElementById('btnBorrarQuery').addEventListener('click', () => {
+    sqlInput.value = '';
+    sqlInput.focus();
 });
 sqlInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && e.ctrlKey) {
