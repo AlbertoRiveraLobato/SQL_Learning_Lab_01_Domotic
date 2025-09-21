@@ -44,14 +44,14 @@ INSERT INTO habitaciones_sensores VALUES (4, 1, '21.0', '2025-09-21 16:30:00');
 INSERT INTO habitaciones_sensores VALUES (4, 2, '55',   '2025-09-21 16:30:00');
 `;
 
-initSqlJs({ locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}` })
+initSqlJs({ locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js` })
     .then(SQL => {
         window.initSqlJsDb = SQL;
         db = new SQL.Database();
         ready = true;
-        // No inicializar la base de datos, debe estar vacía para que el lateral izquierdo esté vacío
         drawRooms();
         drawDbStructure();
+        clearQueryResult();
     });
 
 const sqlInput = document.getElementById('sqlInput');
@@ -62,6 +62,7 @@ const btnBorrar = document.getElementById('btnBorrar');
 const output = document.getElementById('output');
 const roomGrid = document.getElementById('roomGrid');
 const dbStructureDiv = document.getElementById('dbStructure');
+const queryResultPanel = document.getElementById('queryResultPanel');
 
 // Tabulador en textarea (siempre opera dentro del área de texto)
 sqlInput.addEventListener('keydown', function(e) {
@@ -79,6 +80,7 @@ btnInicializar.onclick = function() {
     sqlInput.focus();
     output.innerHTML = 'Código SQL de inicialización pegado. Puedes editarlo y pulsar <b>Ejecutar</b> para crear la base de datos.';
     output.style.color = '#1976d2';
+    clearQueryResult();
 };
 
 // Ejecutar SQL
@@ -88,10 +90,18 @@ btnEjecutar.onclick = function() {
     if (!sql) {
         output.innerHTML = 'Por favor, escribe un comando SQL.';
         output.style.color = '#d84315';
+        clearQueryResult();
         return;
     }
     try {
-        db.run(sql);
+        // Ejecutar y mostrar resultados si hay SELECTs
+        let results = db.exec(sql);
+        let hasSelect = /select\s+/i.test(sql);
+        if (hasSelect && results.length > 0) {
+            showQueryResult(results);
+        } else {
+            clearQueryResult();
+        }
         output.style.color = '#388e3c';
         output.innerText = '¡Comando ejecutado correctamente!';
         drawRooms();
@@ -100,10 +110,11 @@ btnEjecutar.onclick = function() {
         output.style.color = '#d84315';
         let helpMsg = getHelpMessage(sql, e.message);
         output.innerHTML = 'Error: ' + e.message + (helpMsg ? '<br><br>' + helpMsg : '');
+        clearQueryResult();
     }
 };
 
-// Borrar base de datos: elimina todas las tablas
+// Borrar base de datos: elimina todas las tablas (deja la base de datos vacía y lateral izquierdo vacío)
 btnBorrarBD.onclick = function() {
     if (!window.initSqlJsDb) return;
     try {
@@ -118,9 +129,11 @@ btnBorrarBD.onclick = function() {
         output.style.color = '#c62828';
         drawRooms();
         drawDbStructure();
+        clearQueryResult();
     } catch (e) {
         output.innerHTML = 'Error borrando base de datos: ' + e.message;
         output.style.color = '#d84315';
+        clearQueryResult();
     }
 };
 
@@ -129,7 +142,38 @@ btnBorrar.onclick = function() {
     sqlInput.value = '';
     output.innerHTML = '';
     sqlInput.focus();
+    clearQueryResult();
 };
+
+function clearQueryResult() {
+    queryResultPanel.innerHTML = '';
+}
+
+// Mostrar resultados de SELECT y otras consultas con datos
+function showQueryResult(results) {
+    // results: array of { columns, values }
+    let html = '';
+    for (let res of results) {
+        if (res.values.length === 0) {
+            html += "<i>Consulta realizada, pero no hay filas para mostrar.</i>";
+            continue;
+        }
+        html += '<table class="result-table"><thead><tr>';
+        for (let col of res.columns) {
+            html += `<th>${col}</th>`;
+        }
+        html += '</tr></thead><tbody>';
+        for (let row of res.values) {
+            html += '<tr>';
+            for (let cell of row) {
+                html += `<td>${cell === null ? '' : cell}</td>`;
+            }
+            html += '</tr>';
+        }
+        html += '</tbody></table>';
+    }
+    queryResultPanel.innerHTML = html;
+}
 
 // Dibujar habitaciones y sensores
 function drawRooms() {

@@ -155,6 +155,37 @@
             min-height: 2em;
             font-family: Arial, sans-serif;
         }
+        #queryResultPanel {
+            background: #fefefe;
+            border: 1.5px solid #b0bec5;
+            border-radius: 7px;
+            margin-bottom: 1.2em;
+            margin-top: 0.2em;
+            padding: 0.7em 0.8em;
+            min-height: 1.5em;
+            font-size: 1.03em;
+            overflow-x: auto;
+            box-shadow: 0 2px 8px #b0bec530;
+        }
+        .result-table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 0.2em 0 0.5em 0;
+            font-size: 1em;
+        }
+        .result-table th, .result-table td {
+            border: 1px solid #b0bec5;
+            padding: 0.33em 0.75em;
+            text-align: left;
+        }
+        .result-table th {
+            background: #e3e3e3;
+            color: #1976d2;
+            font-weight: bold;
+        }
+        .result-table tr:nth-child(even) td {
+            background: #f8fafc;
+        }
         #dbStructure {
             margin-top: 2.3em;
             background: #f2f6f9;
@@ -213,6 +244,7 @@
                 <button id="btnInicializar">Inicializar</button>
                 <button id="btnBorrar">Borrar cuadro de texto</button>
             </div>
+            <div id="queryResultPanel"></div>
             <div id="output"></div>
             <div id="dbStructure"></div>
         </div>
