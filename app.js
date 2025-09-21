@@ -1,3 +1,6 @@
+// Configuración de versión
+const APP_VERSION = "v21";
+
 let db, ready = false;
 let SQL;
 
@@ -167,4 +170,15 @@ sqlInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && e.ctrlKey) {
         ejecutarSQL(sqlInput.value.trim());
     }
+});
+
+// Actualizar versión en el DOM cuando se carga la página
+document.addEventListener('DOMContentLoaded', () => {
+    const versionTag = document.getElementById('versionTag');
+    if (versionTag) {
+        versionTag.textContent = APP_VERSION;
+    }
+    
+    // También actualizar el título del documento
+    document.title = `SQL Learning Lab 03 ${APP_VERSION}`;
 });
