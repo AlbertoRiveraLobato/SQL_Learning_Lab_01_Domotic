@@ -3,10 +3,9 @@ let SQL;
 
 // Inicializa SQL.js y espera a que esté listo antes de permitir usar la BD
 initSqlJs({
-    locateFile: file => file === "sql-wasm.wasm" ? "./sql-wasm.wasm" : file
+    locateFile: file => `./${file}`
 }).then(SQLLib => {
     SQL = SQLLib;
-    ready = false;
     document.getElementById('output').innerHTML = "<pre style='color: green;'>Librería SQL.js cargada. Pulsa 'Inicializar BD' para continuar.</pre>";
 }).catch(err => {
     document.getElementById('output').innerHTML = `<pre class="error-message">Error cargando SQL.js: ${err.message}</pre>`;
