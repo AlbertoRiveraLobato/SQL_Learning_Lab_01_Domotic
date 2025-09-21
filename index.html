@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>SQL Learning Lab 03 v17</title>
+    <title>SQL Learning Lab 03 v18</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; background: #f5f7fa; }
         #mainTitle {
@@ -33,186 +33,119 @@
             border-radius: 12px;
             padding: 0.2em 1em;
             font-weight: 700;
-            letter-spacing: 1.2px;
-            box-shadow: 0 1px 7px #b0bec580;
-        }
-        #container { display: flex; min-height: 100vh; padding-top: 4.5em; }
-        #left {
-            flex: 1.3;
-            background: #f8fafc;
-            padding: 2em 1.2em 2em 2.5em;
-            border-right: 2px solid #cfd8dc;
-            min-width: 430px;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            overflow-y: auto;
-        }
-        #roomGrid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 2em 2em;
-        }
-        .room-card {
-            min-width: 170px;
-            min-height: 110px;
-            border-radius: 16px;
-            box-shadow: 0 3px 14px #bbc7ce9c;
-            padding: 1.1em 1em .8em 1em;
-            margin-bottom: 10px;
-            color: #fff;
-            font-size: 1em;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        .room-color-0 { background: linear-gradient(135deg, #00bcd4 85%, #0097a7 100%); }
-        .room-color-1 { background: linear-gradient(135deg, #7e57c2 85%, #512da8 100%); }
-        .room-color-2 { background: linear-gradient(135deg, #ef6c00 85%, #d84315 100%); }
-        .room-color-3 { background: linear-gradient(135deg, #43a047 85%, #2e7d32 100%); }
-        .room-color-4 { background: linear-gradient(135deg, #c62828 85%, #ad1457 100%); }
-        .room-title {
-            font-weight: bold;
-            font-size: 1.09em;
-            margin-bottom: .6em;
             letter-spacing: 0.5px;
         }
-        .sensor-list {
+        #container {
             display: flex;
-            flex-direction: column;
-            gap: 0.38em;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1.5em;
+            padding-top: 7em;
+            padding-left: 2em;
+            padding-right: 2em;
         }
-        .sensor-box {
-            background: #fff;
-            color: #222;
-            border-radius: 7px;
-            padding: 0.19em 0.6em 0.19em 0.6em;
-            margin: 0 0 0.18em 0;
-            font-size: .99em;
-            display: flex;
-            align-items: center;
-            box-shadow: 0 1.5px 3px #0001;
-        }
-        .sensor-name {
-            font-weight: 500;
-            margin-right: .7em;
-        }
-        .sensor-value {
-            font-family: 'Fira Mono', 'Consolas', monospace;
-            font-weight: bold;
-            margin-left: auto;
+        #left {
+            min-width: 40%;
+            padding-left: 2em;
+            padding-right: 2em;
         }
         #right {
-            flex: 1.1;
-            background: #e3e3e3;
-            padding: 2.5em 2em;
-            display: flex;
-            flex-direction: column;
-            align-items: stretch;
+            min-width: 60%;
+            padding: 2em;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px #d5dce6;
         }
         #sqlInput {
             width: 100%;
-            min-height: 100px;
+            height: 200px;
+            box-sizing: border-box;
+            font-family: 'Consolas', 'Courier New', monospace;
             font-size: 1.1em;
-            font-family: 'Fira Mono', 'Consolas', monospace;
-            border-radius: 7px;
-            border: 1.5px solid #b0bec5;
-            margin-bottom: 0.7em;
-            padding: 0.8em;
-            background: #f9fafb;
+            padding: 1em;
+            border: 1px solid #ccc;
+            border-radius: 6px;
             resize: vertical;
-            outline: none;
-            transition: border-color 0.2s;
+            background: #fafafa;
+            transition: border-color 0.3s;
         }
-        #sqlInput:focus { border-color: #42a5f5; }
+        #sqlInput:focus { border-color: #1976d2; outline: none; }
         .button-row {
             display: flex;
+            justify-content: flex-end;
             gap: 1em;
-            margin-bottom: 1em;
+            margin-top: 1em;
         }
-        button {
-            padding: 0.62em 1.6em;
-            font-size: 1.07em;
+        .button-row button {
+            padding: 0.7em 1.5em;
+            font-size: 1em;
+            font-weight: bold;
             border: none;
-            border-radius: 7px;
-            background: #1976d2;
-            color: #fff;
-            font-weight: 500;
-            margin-right: 0.3em;
-            box-shadow: 0 2px 5px #b0bec550;
+            border-radius: 6px;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background-color 0.3s, transform 0.1s;
         }
-        button:hover { background: #1565c0; }
-        #btnBorrarBD { background: #ff7043; }
-        #btnBorrarBD:hover { background: #bf360c; }
-        #btnBorrar { background: #757575; }
-        #btnBorrar:hover { background: #424242; }
-        #btnInicializar { background: #ffdd00; color: #333; }
-        #btnInicializar:hover { background: #ffd600; color: #222; }
+        #btnEjecutar { background: #1976d2; color: #fff; }
+        #btnEjecutar:hover { background: #1565c0; transform: translateY(-2px); }
+        #btnBorrarBD, #btnInicializar, #btnBorrar { background: #e0e0e0; color: #555; }
+        #btnBorrarBD:hover, #btnInicializar:hover, #btnBorrar:hover { background: #bdbdbd; transform: translateY(-2px); }
         #output {
-            margin: 0.7em 0 0.5em 0;
-            min-height: 2em;
+            margin-top: 1.5em;
+            padding: 1em;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            min-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-family: 'Consolas', 'Courier New', monospace;
+        }
+        #roomGrid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1.5em;
+        }
+        .room-card {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1em;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        .room-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+        .room-card h3 {
+            margin: 0 0 0.5em 0;
+            font-size: 1.2em;
+            color: #333;
+        }
+        .room-card p {
+            margin: 0;
+            color: #666;
+            font-size: 0.9em;
+        }
+        .help-box {
+            margin-top: 1.5em;
+            padding: 1em;
+            background: #fff3e0;
+            border: 1px solid #ffcc80;
+            border-radius: 6px;
             font-family: Arial, sans-serif;
         }
-        #queryResultPanel {
-            background: #fefefe;
-            border: 1.5px solid #b0bec5;
-            border-radius: 7px;
-            margin-bottom: 1.2em;
-            margin-top: 0.2em;
-            padding: 0.7em 0.8em;
-            min-height: 1.5em;
-            font-size: 1.03em;
-            overflow-x: auto;
-            box-shadow: 0 2px 8px #b0bec530;
+        .help-box b {
+            font-weight: bold;
+            color: #e65100;
         }
-        .result-table {
-            border-collapse: collapse;
-            width: 100%;
-            margin: 0.2em 0 0.5em 0;
-            font-size: 1em;
-        }
-        .result-table th, .result-table td {
-            border: 1px solid #b0bec5;
-            padding: 0.33em 0.75em;
-            text-align: left;
-        }
-        .result-table th {
-            background: #e3e3e3;
-            color: #1976d2;
+        .error-message {
+            color: #d32f2f;
             font-weight: bold;
         }
-        .result-table tr:nth-child(even) td {
-            background: #f8fafc;
-        }
-        #dbStructure {
-            margin-top: 2.3em;
-            background: #f2f6f9;
-            border-radius: 10px;
-            padding: 1.1em 1.1em .4em 1.1em;
-            box-shadow: 0 1.5px 12px #b3c3d6a8;
-        }
-        .db-table-title {
-            color: #1976d2;
-            font-weight: bold;
-            margin-bottom: 0.2em;
-            font-size: 1.08em;
-        }
-        .db-fields-list {
-            margin: 0 0 1em 0.3em;
-            padding: 0;
-            list-style: none;
-        }
-        .db-fields-list li {
-            margin-bottom: 0.18em;
-            font-family: 'Fira Mono', 'Consolas', monospace;
-            font-size: 0.97em;
-        }
-        .pk-mark {
-            background: #fff8;
-            color: #344;
-            border-radius: 6px;
+        #mainTitle #versionTag {
             font-weight: bold;
             font-size: 0.85em;
             padding: 0 .35em;
@@ -229,7 +162,7 @@
 <body>
     <div id="mainTitle">
         SQL Learning Lab 03
-        <span id="versionTag">v17</span>
+        <span id="versionTag">v18</span>
     </div>
     <div id="container">
         <div id="left">
@@ -242,14 +175,11 @@
                 <button id="btnEjecutar">Ejecutar</button>
                 <button id="btnBorrarBD">Borrar base de datos</button>
                 <button id="btnInicializar">Inicializar</button>
-                <button id="btnBorrar">Borrar cuadro de texto</button>
+                <button id="btnBorrar">Borrar cuadro de resultados</button>
             </div>
-            <div id="queryResultPanel"></div>
             <div id="output"></div>
-            <div id="dbStructure"></div>
         </div>
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
