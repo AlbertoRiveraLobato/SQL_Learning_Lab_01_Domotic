@@ -49,6 +49,7 @@ initSqlJs({ locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1
         window.initSqlJsDb = SQL;
         db = new SQL.Database();
         ready = true;
+        // No inicializar la base de datos, debe estar vacía para que el lateral izquierdo esté vacío
         drawRooms();
         drawDbStructure();
     });
