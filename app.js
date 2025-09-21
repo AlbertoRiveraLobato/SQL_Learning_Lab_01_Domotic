@@ -1,5 +1,5 @@
 // Configuración de versión
-const APP_VERSION = "v22";
+const APP_VERSION = "v24";
 
 let db, ready = false;
 let SQL;
@@ -128,6 +128,14 @@ async function ejecutarSQL(sql) {
             cargarRooms();
         }
         
+        // Si se realizaron cambios en la tabla habitaciones, actualizar la vista
+        if (sql.toUpperCase().includes('INSERT INTO HABITACIONES') || 
+            sql.toUpperCase().includes('UPDATE HABITACIONES') || 
+            sql.toUpperCase().includes('DELETE FROM HABITACIONES') ||
+            sql.toUpperCase().includes('ALTER TABLE HABITACIONES')) {
+            cargarRooms();
+        }
+        
     } catch (e) {
         printError(e.message);
     }
@@ -154,23 +162,47 @@ function borrarDB() {
 
 // Cargar tarjetas de habitaciones
 function cargarRooms() {
-    if (!ready || !db) return;
-    let stmt = db.prepare('SELECT * FROM habitaciones');
-    roomGrid.innerHTML = '';
-    let idx = 0;
-    while (stmt.step()) {
-        let row = stmt.getAsObject();
-        const roomCard = document.createElement('div');
-        roomCard.className = `room-card room-color-${idx % 5}`;
-        roomCard.innerHTML = `
-            <div class="room-title">${row.nombre}</div>
-            <div class="room-info">ID: ${row.id_habitacion} &nbsp;|&nbsp; Planta: ${row.planta}</div>
-        `;
-        roomCard.onclick = () => sqlInput.value = `SELECT * FROM habitaciones_sensores WHERE id_habitacion = ${row.id_habitacion};`;
-        roomGrid.appendChild(roomCard);
-        idx++;
+    if (!ready || !db) {
+        roomGrid.innerHTML = '<div style="color: #666; padding: 1em; text-align: center; font-style: italic;">Base de datos no inicializada</div>';
+        return;
     }
-    stmt.free();
+    
+    try {
+        let stmt = db.prepare('SELECT * FROM habitaciones');
+        roomGrid.innerHTML = '';
+        let idx = 0;
+        while (stmt.step()) {
+            let row = stmt.getAsObject();
+            const roomCard = document.createElement('div');
+            roomCard.className = `room-card room-color-${idx % 5}`;
+            roomCard.innerHTML = `
+                <div class="room-title">${row.nombre}</div>
+                <div class="room-info">ID: ${row.id_habitacion} &nbsp;|&nbsp; Planta: ${row.planta}</div>
+            `;
+            roomCard.onclick = () => sqlInput.value = `SELECT * FROM habitaciones_sensores WHERE id_habitacion = ${row.id_habitacion};`;
+            roomGrid.appendChild(roomCard);
+            idx++;
+        }
+        stmt.free();
+        
+        // Si no hay habitaciones, mostrar mensaje informativo
+        if (idx === 0) {
+            roomGrid.innerHTML = '<div style="color: #666; padding: 1em; text-align: center; font-style: italic;">No hay habitaciones en la base de datos</div>';
+        }
+    } catch (e) {
+        roomGrid.innerHTML = `<div style="color: #d32f2f; padding: 1em; text-align: center;">Error cargando habitaciones: ${e.message}</div>`;
+    }
+}
+
+// Función para actualizar la vista de habitaciones
+function actualizarVista() {
+    if (!ready || !db) {
+        output.innerHTML = `<pre class="error-message">La base de datos no está lista. Por favor, inicialice primero.</pre>`;
+        return;
+    }
+    
+    cargarRooms();
+    output.innerHTML = `<pre style="color: green;">✅ Vista de habitaciones actualizada correctamente.</pre>`;
 }
 
 // Botones
@@ -189,6 +221,7 @@ document.getElementById('btnBorrarQuery').addEventListener('click', () => {
     sqlInput.value = '';
     sqlInput.focus();
 });
+document.getElementById('btnActualizarVista').addEventListener('click', () => actualizarVista());
 sqlInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && e.ctrlKey) {
         ejecutarSQL(sqlInput.value.trim());
