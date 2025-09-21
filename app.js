@@ -94,10 +94,16 @@ btnEjecutar.onclick = function() {
         return;
     }
     try {
-        // Ejecutar y mostrar resultados si hay SELECTs
+        // Ejecutar la consulta, mostrar resultados de todos los SELECT (si hay)
         let results = db.exec(sql);
-        let hasSelect = /select\s+/i.test(sql);
-        if (hasSelect && results.length > 0) {
+        let foundResults = false;
+        for (const res of results) {
+            if (res && res.columns && res.columns.length > 0) {
+                foundResults = true;
+                break;
+            }
+        }
+        if (foundResults) {
             showQueryResult(results);
         } else {
             clearQueryResult();
