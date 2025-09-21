@@ -2,33 +2,219 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>SQL Learning Lab DML 01 - Domótica (v2)</title>
-    <link rel="stylesheet" href="style.css">
+    <title>SQL Learning Lab 03 v13</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; background: #f5f7fa; }
+        #mainTitle {
+            width: 100vw;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 100;
+            text-align: center;
+            font-size: 2.1em;
+            font-weight: bold;
+            margin: 0;
+            padding: 0.75em 0 0.4em 0;
+            letter-spacing: 1.3px;
+            color: #1976d2;
+            background: #f8fafc;
+            border-bottom: 2px solid #cfd8dc;
+            box-shadow: 0 4px 24px #b6c8e830;
+            text-shadow: 0 2px 8px #b6c8e855;
+        }
+        #versionTag {
+            display: inline-block;
+            margin-left: 1em;
+            font-size: 0.7em;
+            vertical-align: middle;
+            background: #1976d2;
+            color: #fff;
+            border-radius: 12px;
+            padding: 0.2em 1em;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            box-shadow: 0 1px 7px #b0bec580;
+        }
+        #container { display: flex; min-height: 100vh; padding-top: 4.5em; }
+        #left {
+            flex: 1.3;
+            background: #f8fafc;
+            padding: 2em 1.2em 2em 2.5em;
+            border-right: 2px solid #cfd8dc;
+            min-width: 430px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            overflow-y: auto;
+        }
+        #roomGrid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2em 2em;
+        }
+        .room-card {
+            min-width: 170px;
+            min-height: 110px;
+            border-radius: 16px;
+            box-shadow: 0 3px 14px #bbc7ce9c;
+            padding: 1.1em 1em .8em 1em;
+            margin-bottom: 10px;
+            color: #fff;
+            font-size: 1em;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .room-color-0 { background: linear-gradient(135deg, #00bcd4 85%, #0097a7 100%); }
+        .room-color-1 { background: linear-gradient(135deg, #7e57c2 85%, #512da8 100%); }
+        .room-color-2 { background: linear-gradient(135deg, #ef6c00 85%, #d84315 100%); }
+        .room-color-3 { background: linear-gradient(135deg, #43a047 85%, #2e7d32 100%); }
+        .room-color-4 { background: linear-gradient(135deg, #c62828 85%, #ad1457 100%); }
+        .room-title {
+            font-weight: bold;
+            font-size: 1.09em;
+            margin-bottom: .6em;
+            letter-spacing: 0.5px;
+        }
+        .sensor-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.38em;
+        }
+        .sensor-box {
+            background: #fff;
+            color: #222;
+            border-radius: 7px;
+            padding: 0.19em 0.6em 0.19em 0.6em;
+            margin: 0 0 0.18em 0;
+            font-size: .99em;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 1.5px 3px #0001;
+        }
+        .sensor-name {
+            font-weight: 500;
+            margin-right: .7em;
+        }
+        .sensor-value {
+            font-family: 'Fira Mono', 'Consolas', monospace;
+            font-weight: bold;
+            margin-left: auto;
+        }
+        #right {
+            flex: 1.1;
+            background: #e3e3e3;
+            padding: 2.5em 2em;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+        }
+        #sqlInput {
+            width: 100%;
+            min-height: 100px;
+            font-size: 1.1em;
+            font-family: 'Fira Mono', 'Consolas', monospace;
+            border-radius: 7px;
+            border: 1.5px solid #b0bec5;
+            margin-bottom: 0.7em;
+            padding: 0.8em;
+            background: #f9fafb;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        #sqlInput:focus { border-color: #42a5f5; }
+        .button-row {
+            display: flex;
+            gap: 1em;
+            margin-bottom: 1em;
+        }
+        button {
+            padding: 0.62em 1.6em;
+            font-size: 1.07em;
+            border: none;
+            border-radius: 7px;
+            background: #1976d2;
+            color: #fff;
+            font-weight: 500;
+            margin-right: 0.3em;
+            box-shadow: 0 2px 5px #b0bec550;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover { background: #1565c0; }
+        #btnReset { background: #ff7043; }
+        #btnReset:hover { background: #bf360c; }
+        #btnBorrar { background: #757575; }
+        #btnBorrar:hover { background: #424242; }
+        #output {
+            margin: 0.7em 0 0.5em 0;
+            min-height: 2em;
+            font-family: Arial, sans-serif;
+        }
+        #dbStructure {
+            margin-top: 2.3em;
+            background: #f2f6f9;
+            border-radius: 10px;
+            padding: 1.1em 1.1em .4em 1.1em;
+            box-shadow: 0 1.5px 12px #b3c3d6a8;
+        }
+        .db-table-title {
+            color: #1976d2;
+            font-weight: bold;
+            margin-bottom: 0.2em;
+            font-size: 1.08em;
+        }
+        .db-fields-list {
+            margin: 0 0 1em 0.3em;
+            padding: 0;
+            list-style: none;
+        }
+        .db-fields-list li {
+            margin-bottom: 0.18em;
+            font-family: 'Fira Mono', 'Consolas', monospace;
+            font-size: 0.97em;
+        }
+        .pk-mark {
+            background: #fff8;
+            color: #344;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 0.85em;
+            padding: 0 .35em;
+            margin-left: 0.2em;
+        }
+        @media (max-width: 950px) {
+            #container { flex-direction: column; padding-top: 5.5em; }
+            #mainTitle { font-size: 1.3em; padding: 0.7em 0 0.3em 0; }
+            #left, #right { min-width: 0; width: 100%; padding-left: 1.5em; padding-right: 1.5em; }
+            #roomGrid { gap: 1.1em; }
+        }
+    </style>
 </head>
 <body>
-    <h1>SQL Learning Lab DML 01 - Domótica</h1>
-    <div id="house-plan">
-        <!-- Plano simulado de la casa: puedes modificarlo o mejorarlo como ejercicio -->
-        <div class="room" data-room="salon">Salón</div>
-        <div class="room" data-room="cocina">Cocina</div>
-        <div class="room" data-room="dormitorio">Dormitorio</div>
-        <div class="room" data-room="baño">Baño</div>
+    <div id="mainTitle">
+        SQL Learning Lab 03
+        <span id="versionTag">v13</span>
     </div>
-    <div id="sensors-status">
-        <!-- Aquí se mostrarán los sensores y su estado, según la BBDD SQL en memoria -->
+    <div id="container">
+        <div id="left">
+            <h2 style="margin-bottom:0.8em">Habitaciones y sensores</h2>
+            <div id="roomGrid"></div>
+        </div>
+        <div id="right">
+            <textarea id="sqlInput" spellcheck="false" placeholder="Escribe aquí tu código SQL"></textarea>
+            <div class="button-row">
+                <button id="btnEjecutar">Ejecutar</button>
+                <button id="btnReset">Restablecer BD</button>
+                <button id="btnBorrar">Borrar cuadro de texto</button>
+            </div>
+            <div id="output"></div>
+            <div id="dbStructure"></div>
+        </div>
     </div>
-    <div id="db-schema">
-        <!-- Aquí se mostrarán las tablas y atributos de la base de datos -->
-    </div>
-    <div id="sql-console">
-        <h2>Consola SQL</h2>
-        <textarea id="sql-input" rows="4" cols="80" placeholder="Escribe aquí tu consulta SQL..."></textarea>
-        <br>
-        <button onclick="runSQL()">Ejecutar SQL</button>
-        <button onclick="resetDB()">Restablecer BBDD</button>
-        <div id="sql-result"></div>
-    </div>
-    <script src="sql-wasm.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
