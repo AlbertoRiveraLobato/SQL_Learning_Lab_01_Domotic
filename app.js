@@ -1,5 +1,5 @@
 let db, ready = false;
-const defaultSQL = `
+const initSQL = `
 CREATE TABLE habitaciones (
     id_habitacion INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT,
@@ -44,30 +44,18 @@ INSERT INTO habitaciones_sensores VALUES (4, 1, '21.0', '2025-09-21 16:30:00');
 INSERT INTO habitaciones_sensores VALUES (4, 2, '55',   '2025-09-21 16:30:00');
 `;
 
-function resetDB() {
-    db = new window.initSqlJsDb.Database();
-    db.run(defaultSQL);
-    drawRooms();
-    drawDbStructure();
-    output.innerHTML = '';
-}
-function getInitSqlJsDb(cb) {
-    if (window.initSqlJsDb) return cb();
-    initSqlJs({ locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}` })
-        .then(SQL => {
-            window.initSqlJsDb = SQL;
-            db = new SQL.Database();
-            db.run(defaultSQL);
-            ready = true;
-            drawRooms();
-            drawDbStructure();
-        });
-}
-getInitSqlJsDb(()=>{});
+initSqlJs({ locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}` })
+    .then(SQL => {
+        window.initSqlJsDb = SQL;
+        db = new SQL.Database();
+        ready = true;
+        drawRooms();
+        drawDbStructure();
+    });
 
 const sqlInput = document.getElementById('sqlInput');
 const btnEjecutar = document.getElementById('btnEjecutar');
-const btnReset = document.getElementById('btnReset');
+const btnBorrarBD = document.getElementById('btnBorrarBD');
 const btnInicializar = document.getElementById('btnInicializar');
 const btnBorrar = document.getElementById('btnBorrar');
 const output = document.getElementById('output');
@@ -86,9 +74,9 @@ sqlInput.addEventListener('keydown', function(e) {
 
 // Botón Inicializar: pega el bloque de SQL para crear estructura y datos de ejemplo
 btnInicializar.onclick = function() {
-    sqlInput.value = defaultSQL.trim();
+    sqlInput.value = initSQL.trim();
     sqlInput.focus();
-    output.innerHTML = 'Código SQL de inicialización pegado. Puedes editarlo y pulsar <b>Ejecutar</b> para inicializar la base de datos.';
+    output.innerHTML = 'Código SQL de inicialización pegado. Puedes editarlo y pulsar <b>Ejecutar</b> para crear la base de datos.';
     output.style.color = '#1976d2';
 };
 
@@ -114,12 +102,25 @@ btnEjecutar.onclick = function() {
     }
 };
 
-// Restablecer BD
-btnReset.onclick = function() {
-    resetDB();
-    sqlInput.value = '';
-    output.innerHTML = 'Base de datos restablecida al estado inicial.';
-    output.style.color = '#1976d2';
+// Borrar base de datos: elimina todas las tablas
+btnBorrarBD.onclick = function() {
+    if (!window.initSqlJsDb) return;
+    try {
+        // Obtener nombres de tablas
+        const res = db.exec("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';");
+        if (res[0] && res[0].values.length) {
+            for (const row of res[0].values) {
+                db.run(`DROP TABLE IF EXISTS "${row[0]}";`);
+            }
+        }
+        output.innerHTML = 'Base de datos borrada. No hay tablas ni datos.';
+        output.style.color = '#c62828';
+        drawRooms();
+        drawDbStructure();
+    } catch (e) {
+        output.innerHTML = 'Error borrando base de datos: ' + e.message;
+        output.style.color = '#d84315';
+    }
 };
 
 // Borrar cuadro de texto
@@ -132,15 +133,19 @@ btnBorrar.onclick = function() {
 // Dibujar habitaciones y sensores
 function drawRooms() {
     if (!window.initSqlJsDb) return;
-    let rooms = db.exec("SELECT id_habitacion, nombre FROM habitaciones ORDER BY id_habitacion;");
-    let sensors = db.exec("SELECT id_sensor, nombre, tipo FROM sensores;");
-    let roomSensors = db.exec("SELECT id_habitacion, id_sensor, valor FROM habitaciones_sensores;");
-
+    let rooms, sensors, roomSensors;
+    try {
+        rooms = db.exec("SELECT id_habitacion, nombre FROM habitaciones ORDER BY id_habitacion;");
+        sensors = db.exec("SELECT id_sensor, nombre, tipo FROM sensores;");
+        roomSensors = db.exec("SELECT id_habitacion, id_sensor, valor FROM habitaciones_sensores;");
+    } catch {
+        roomGrid.innerHTML = "<i>No hay habitaciones en la base de datos.</i>";
+        return;
+    }
     if (!rooms[0] || !rooms[0].values.length) {
         roomGrid.innerHTML = "<i>No hay habitaciones en la base de datos.</i>";
         return;
     }
-
     // Map sensors and roomSensors
     let sensorsMap = {};
     if (sensors[0])
@@ -161,7 +166,6 @@ function drawRooms() {
         html += `<div class="room-card room-color-${color}">
             <div class="room-title">${room[1]}</div>
             <div class="sensor-list">`;
-
         // Para cada sensor que esté en esta habitación
         for (let sensorId in sensorsMap) {
             let val = roomSensorsMap[room[0]+'-'+sensorId];
@@ -172,7 +176,6 @@ function drawRooms() {
                 </div>`;
             }
         }
-
         html += `</div></div>`;
     }
     roomGrid.innerHTML = html;
@@ -181,7 +184,13 @@ function drawRooms() {
 // Dibujar estructura de BD (tablas y atributos)
 function drawDbStructure() {
     if (!window.initSqlJsDb) return;
-    const res = db.exec("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name;");
+    let res;
+    try {
+        res = db.exec("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name;");
+    } catch {
+        dbStructureDiv.innerHTML = "<i>No hay tablas en la base de datos.</i>";
+        return;
+    }
     dbStructureDiv.innerHTML = '';
     if (!res[0] || !res[0].values.length) {
         dbStructureDiv.innerHTML = "<i>No hay tablas en la base de datos.</i>";
