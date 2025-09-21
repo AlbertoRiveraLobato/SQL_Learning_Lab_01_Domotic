@@ -1,5 +1,5 @@
 // Configuración de versión
-const APP_VERSION = "v24";
+const APP_VERSION = "v25";
 
 let db, ready = false;
 let SQL;
@@ -168,22 +168,76 @@ function cargarRooms() {
     }
     
     try {
-        let stmt = db.prepare('SELECT * FROM habitaciones');
+        // Consulta para obtener habitaciones
+        let stmtHabitaciones = db.prepare('SELECT * FROM habitaciones ORDER BY id_habitacion');
         roomGrid.innerHTML = '';
         let idx = 0;
-        while (stmt.step()) {
-            let row = stmt.getAsObject();
+        
+        while (stmtHabitaciones.step()) {
+            let habitacion = stmtHabitaciones.getAsObject();
+            
+            // Consulta para obtener sensores de esta habitación
+            let stmtSensores = db.prepare(`
+                SELECT s.nombre as sensor_nombre, s.tipo, hs.valor, hs.fecha
+                FROM sensores s
+                JOIN habitaciones_sensores hs ON s.id_sensor = hs.id_sensor
+                WHERE hs.id_habitacion = ?
+                ORDER BY s.nombre
+            `);
+            stmtSensores.bind([habitacion.id_habitacion]);
+            
+            let sensoresInfo = [];
+            while (stmtSensores.step()) {
+                let sensor = stmtSensores.getAsObject();
+                sensoresInfo.push(sensor);
+            }
+            stmtSensores.free();
+            
+            // Crear la tarjeta de habitación
             const roomCard = document.createElement('div');
             roomCard.className = `room-card room-color-${idx % 5}`;
+            
+            // Generar HTML para los sensores
+            let sensoresHTML = '';
+            if (sensoresInfo.length > 0) {
+                sensoresHTML = '<div class="sensors-info">';
+                sensoresInfo.forEach(sensor => {
+                    let estadoClass = '';
+                    let estadoIcon = '';
+                    
+                    // Determinar estado visual según el tipo de sensor
+                    if (sensor.tipo === 'booleano') {
+                        estadoClass = sensor.valor === 'si' ? 'sensor-active' : 'sensor-inactive';
+                        estadoIcon = sensor.valor === 'si' ? '🟢' : '🔴';
+                    } else {
+                        estadoClass = 'sensor-numeric';
+                        estadoIcon = '📊';
+                    }
+                    
+                    sensoresHTML += `
+                        <div class="sensor-item ${estadoClass}">
+                            <span class="sensor-icon">${estadoIcon}</span>
+                            <span class="sensor-name">${sensor.sensor_nombre}:</span>
+                            <span class="sensor-value">${sensor.valor}${sensor.tipo === 'numérico' && (sensor.sensor_nombre === 'Temperatura') ? '°C' : sensor.tipo === 'numérico' && (sensor.sensor_nombre === 'Humedad') ? '%' : ''}</span>
+                        </div>
+                    `;
+                });
+                sensoresHTML += '</div>';
+            } else {
+                sensoresHTML = '<div class="no-sensors">Sin sensores</div>';
+            }
+            
             roomCard.innerHTML = `
-                <div class="room-title">${row.nombre}</div>
-                <div class="room-info">ID: ${row.id_habitacion} &nbsp;|&nbsp; Planta: ${row.planta}</div>
+                <div class="room-title">${habitacion.nombre}</div>
+                <div class="room-info">ID: ${habitacion.id_habitacion} &nbsp;|&nbsp; Planta: ${habitacion.planta}</div>
+                ${sensoresHTML}
             `;
-            roomCard.onclick = () => sqlInput.value = `SELECT * FROM habitaciones_sensores WHERE id_habitacion = ${row.id_habitacion};`;
+            
+            roomCard.onclick = () => sqlInput.value = `SELECT * FROM habitaciones_sensores WHERE id_habitacion = ${habitacion.id_habitacion};`;
             roomGrid.appendChild(roomCard);
             idx++;
         }
-        stmt.free();
+        stmtHabitaciones.free();
         
         // Si no hay habitaciones, mostrar mensaje informativo
         if (idx === 0) {
