@@ -54,8 +54,8 @@
             gap: 2em 2em;
         }
         .room-card {
-            min-width: 170px;
-            min-height: 110px;
+            min-width: 190px;
+            min-height: 140px;
             border-radius: 16px;
             box-shadow: 0 3px 14px #bbc7ce9c;
             padding: 1.1em 1em .8em 1em;
@@ -79,6 +79,49 @@
         .room-info {
             font-size: 0.9em;
             opacity: 0.95;
+            margin-bottom: 0.5em;
+        }
+        .sensors-info {
+            margin-top: 0.3em;
+            width: 100%;
+        }
+        .sensor-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.2em;
+            font-size: 0.75em;
+            padding: 0.1em 0;
+        }
+        .sensor-icon {
+            margin-right: 0.3em;
+            font-size: 0.8em;
+        }
+        .sensor-name {
+            font-weight: 500;
+            margin-right: 0.3em;
+            min-width: 60px;
+        }
+        .sensor-value {
+            font-weight: bold;
+            background: rgba(255,255,255,0.2);
+            padding: 0.1em 0.3em;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        .sensor-active .sensor-value {
+            background: rgba(76, 175, 80, 0.3);
+        }
+        .sensor-inactive .sensor-value {
+            background: rgba(244, 67, 54, 0.3);
+        }
+        .sensor-numeric .sensor-value {
+            background: rgba(33, 150, 243, 0.3);
+        }
+        .no-sensors {
+            font-size: 0.8em;
+            opacity: 0.7;
+            font-style: italic;
+            margin-top: 0.3em;
         }
         #right {
             flex: 2.2;
