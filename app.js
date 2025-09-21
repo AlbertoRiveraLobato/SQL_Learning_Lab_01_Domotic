@@ -2,7 +2,8 @@ let db, ready = false;
 const defaultSQL = `
 CREATE TABLE habitaciones (
     id_habitacion INTEGER PRIMARY KEY AUTOINCREMENT,
-    nombre TEXT
+    nombre TEXT,
+    planta INTEGER
 );
 
 CREATE TABLE sensores (
@@ -11,28 +12,36 @@ CREATE TABLE sensores (
     tipo TEXT
 );
 
-CREATE TABLE sensores_por_habitacion (
+CREATE TABLE habitaciones_sensores (
     id_habitacion INTEGER,
     id_sensor INTEGER,
     valor TEXT,
+    fecha DATETIME,
     PRIMARY KEY(id_habitacion, id_sensor)
 );
 
-INSERT INTO habitaciones (nombre) VALUES ('Salón'), ('Dormitorio'), ('Cocina'), ('Baño');
-INSERT INTO sensores (nombre, tipo) VALUES ('Temperatura', 'numérico'), ('Humedad', 'numérico'), ('Presencia', 'booleano'), ('Luz', 'numérico');
+INSERT INTO habitaciones (nombre, planta) VALUES
+    ('Salón', 0),
+    ('Dormitorio', 1),
+    ('Cocina', 0),
+    ('Baño', 1);
 
--- Asignar sensores a habitaciones con valores de ejemplo
-INSERT INTO sensores_por_habitacion VALUES (1, 1, '22.1');
-INSERT INTO sensores_por_habitacion VALUES (1, 2, '38');
-INSERT INTO sensores_por_habitacion VALUES (1, 3, 'no');
-INSERT INTO sensores_por_habitacion VALUES (1, 4, '70');
-INSERT INTO sensores_por_habitacion VALUES (2, 1, '20.5');
-INSERT INTO sensores_por_habitacion VALUES (2, 2, '45');
-INSERT INTO sensores_por_habitacion VALUES (2, 3, 'sí');
-INSERT INTO sensores_por_habitacion VALUES (3, 1, '19.2');
-INSERT INTO sensores_por_habitacion VALUES (3, 4, '20');
-INSERT INTO sensores_por_habitacion VALUES (4, 1, '21.0');
-INSERT INTO sensores_por_habitacion VALUES (4, 2, '55');
+INSERT INTO sensores (nombre, tipo) VALUES
+    ('Temperatura', 'numérico'),
+    ('Humedad', 'numérico'),
+    ('Presencia', 'booleano'),
+    ('Luminosidad', 'numérico');
+
+INSERT INTO habitaciones_sensores VALUES (1, 1, '22.1', '2025-09-21 16:30:00');
+INSERT INTO habitaciones_sensores VALUES (1, 2, '38',   '2025-09-21 16:30:00');
+INSERT INTO habitaciones_sensores VALUES (1, 3, 'no',   '2025-09-21 16:30:00');
+INSERT INTO habitaciones_sensores VALUES (2, 1, '20.5', '2025-09-21 16:30:00');
+INSERT INTO habitaciones_sensores VALUES (2, 2, '45',   '2025-09-21 16:30:00');
+INSERT INTO habitaciones_sensores VALUES (2, 3, 'sí',   '2025-09-21 16:30:00');
+INSERT INTO habitaciones_sensores VALUES (3, 1, '19.2', '2025-09-21 16:30:00');
+INSERT INTO habitaciones_sensores VALUES (3, 4, '20',   '2025-09-21 16:30:00');
+INSERT INTO habitaciones_sensores VALUES (4, 1, '21.0', '2025-09-21 16:30:00');
+INSERT INTO habitaciones_sensores VALUES (4, 2, '55',   '2025-09-21 16:30:00');
 `;
 
 function resetDB() {
@@ -59,12 +68,13 @@ getInitSqlJsDb(()=>{});
 const sqlInput = document.getElementById('sqlInput');
 const btnEjecutar = document.getElementById('btnEjecutar');
 const btnReset = document.getElementById('btnReset');
+const btnInicializar = document.getElementById('btnInicializar');
 const btnBorrar = document.getElementById('btnBorrar');
 const output = document.getElementById('output');
 const roomGrid = document.getElementById('roomGrid');
 const dbStructureDiv = document.getElementById('dbStructure');
 
-// Tabulador en textarea
+// Tabulador en textarea (siempre opera dentro del área de texto)
 sqlInput.addEventListener('keydown', function(e) {
     if (e.key === "Tab") {
         e.preventDefault();
@@ -73,6 +83,14 @@ sqlInput.addEventListener('keydown', function(e) {
         this.selectionStart = this.selectionEnd = selectionStart + 1;
     }
 });
+
+// Botón Inicializar: pega el bloque de SQL para crear estructura y datos de ejemplo
+btnInicializar.onclick = function() {
+    sqlInput.value = defaultSQL.trim();
+    sqlInput.focus();
+    output.innerHTML = 'Código SQL de inicialización pegado. Puedes editarlo y pulsar <b>Ejecutar</b> para inicializar la base de datos.';
+    output.style.color = '#1976d2';
+};
 
 // Ejecutar SQL
 btnEjecutar.onclick = function() {
@@ -116,7 +134,7 @@ function drawRooms() {
     if (!window.initSqlJsDb) return;
     let rooms = db.exec("SELECT id_habitacion, nombre FROM habitaciones ORDER BY id_habitacion;");
     let sensors = db.exec("SELECT id_sensor, nombre, tipo FROM sensores;");
-    let roomSensors = db.exec("SELECT id_habitacion, id_sensor, valor FROM sensores_por_habitacion;");
+    let roomSensors = db.exec("SELECT id_habitacion, id_sensor, valor FROM habitaciones_sensores;");
 
     if (!rooms[0] || !rooms[0].values.length) {
         roomGrid.innerHTML = "<i>No hay habitaciones en la base de datos.</i>";
