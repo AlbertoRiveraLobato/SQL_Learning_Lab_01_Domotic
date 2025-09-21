@@ -1,4 +1,18 @@
 let db, ready = false;
+let SQL;
+
+// Inicializa SQL.js y espera a que esté listo antes de permitir usar la BD
+initSqlJs({
+    locateFile: file => file === "sql-wasm.wasm" ? "./sql-wasm.wasm" : file
+}).then(SQLLib => {
+    SQL = SQLLib;
+    ready = false;
+    document.getElementById('output').innerHTML = "<pre style='color: green;'>Librería SQL.js cargada. Pulsa 'Inicializar BD' para continuar.</pre>";
+}).catch(err => {
+    document.getElementById('output').innerHTML = `<pre class="error-message">Error cargando SQL.js: ${err.message}</pre>`;
+});
+
+// Definición del esquema y datos de ejemplo
 const initSQL = `
 CREATE TABLE habitaciones (
     id_habitacion INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -47,18 +61,17 @@ const output = document.getElementById('output');
 const sqlInput = document.getElementById('sqlInput');
 const roomGrid = document.getElementById('roomGrid');
 
+// Mostrar resultados en una tabla
 function printResult(rows) {
     if (!rows || rows.length === 0) {
         output.innerHTML = "<pre>No hay resultados para mostrar.</pre>";
         return;
     }
-
     let html = '<table><thead><tr>';
     for (const key in rows[0]) {
         html += `<th>${key}</th>`;
     }
     html += '</tr></thead><tbody>';
-
     rows.forEach(row => {
         html += '<tr>';
         for (const key in row) {
@@ -66,79 +79,43 @@ function printResult(rows) {
         }
         html += '</tr>';
     });
-
     html += '</tbody></table>';
     output.innerHTML = html;
 }
 
+// Mostrar errores
 function printError(msg) {
     output.innerHTML = `<pre class="error-message">Error: ${msg}</pre>`;
 }
 
+// Ejecutar SQL y mostrar resultados
 async function ejecutarSQL(sql) {
-    if (!ready) {
+    if (!ready || !db) {
         printError("La base de datos no está lista. Por favor, inicialice o espere.");
         return;
     }
     try {
-        const rows = await db.query(sql);
-        printResult(rows);
+        const rows = db.exec(sql)[0]?.values || [];
+        const columns = db.exec(sql)[0]?.columns || [];
+        // Formatear como array de objetos
+        let data = [];
+        rows.forEach(row => {
+            let obj = {};
+            columns.forEach((col, i) => obj[col] = row[i]);
+            data.push(obj);
+        });
+        printResult(data);
     } catch (e) {
         printError(e.message);
     }
 }
 
-function getHelpText(sql) {
-    sql = sql.trim().toLowerCase();
-    if (sql.startsWith('create table') && sql.includes('primary key')) {
-        return `
-            <b>Ayuda:</b> Para definir una clave primaria auto-incremental en SQLite, usa ` + "`INTEGER PRIMARY KEY AUTOINCREMENT`" + `.
-        `;
-    }
-    if (/drop\\s+table/i.test(sql) && !/if\\s+exists/i.test(sql)) {
-        return `
-            <b>Ayuda:</b> Es mejor usar ` + "`DROP TABLE IF EXISTS nombre_tabla;`" + ` para evitar errores si la tabla no existe.
-        `;
-    }
-    if (/alter\\s+table\\s+\\w+\\s+rename\\s+column/i.test(sql)) {
-        return `
-            <b>Ayuda:</b> SQLite no soporta renombrar columnas directamente. Crea una tabla nueva, copia los datos y renombra.
-        `;
-    }
-    if (/alter\\s+table\\s+\\w+\\s+modify\\s+column/i.test(sql) || /alter\\s+table\\s+\\w+\\s+change\\s+column/i.test(sql)) {
-        return `
-            <b>Ayuda:</b> SQLite no soporta modificar columnas. Crea una tabla nueva con el diseño correcto y copia los datos.
-        `;
-    }
-    if (/alter\\s+table\\s+\\w+\\s+add\\s+primary\\s+key/i.test(sql)) {
-        return `
-            <b>Ayuda:</b> Las claves primarias sólo pueden definirse al crear la tabla en SQLite.
-        `;
-    }
-    if (/alter\\s+table\\s+\\w+\\s+add\\s+constraint/i.test(sql)) {
-        return `
-            <b>Ayuda:</b> Las restricciones deben definirse en el ` + "`CREATE TABLE`" + ` en SQLite.
-        `;
-    }
-    if (/alter\\s+table\\s+\\w+\\s+add\\s+foreign\\s+key/i.test(sql)) {
-        return `
-            <b>Ayuda:</b> Las claves foráneas deben definirse en el ` + "`CREATE TABLE`" + ` en SQLite.
-        `;
-    }
-    if (/drop\\s+index/i.test(sql) && /on\\s+\\w+/i.test(sql)) {
-        return `
-            <b>Ayuda:</b> En SQLite la sintaxis correcta es ` + "`DROP INDEX nombre_indice;`" + `
-        `;
-    }
-    if (/\\b(enum|set|mediumint|tinyint|double|longtext|geography|geometry|jsonb)\\b/i.test(sql)) {
-        return `
-            <b>Ayuda:</b> Algunos tipos de datos de bases de datos como MySQL o Postgres no son compatibles con SQLite. Usa los tipos: ` + "`TEXT`, `INTEGER`, `REAL`, `BLOB`, `NUMERIC`" + `.
-        `;
-    }
-    return '';
-}
-
+// Inicializar la base de datos
 function inicializarDB() {
+    if (!SQL) {
+        printError("La librería SQL.js aún no está lista.");
+        return;
+    }
     db = new SQL.Database();
     db.exec(initSQL);
     ready = true;
@@ -146,35 +123,39 @@ function inicializarDB() {
     cargarRooms();
 }
 
+// Borrar la base de datos
 function borrarDB() {
-    db.close();
+    if (db) db.close();
     ready = false;
     output.innerHTML = `<pre style="color: red;">Base de datos borrada. Debe inicializarla de nuevo para continuar.</pre>`;
     roomGrid.innerHTML = '';
 }
 
+// Cargar tarjetas de habitaciones
 function cargarRooms() {
-    if (!ready) return;
-    const rooms = db.query('SELECT * FROM habitaciones');
+    if (!ready || !db) return;
+    let stmt = db.prepare('SELECT * FROM habitaciones');
     roomGrid.innerHTML = '';
-    rooms.forEach(room => {
+    let idx = 0;
+    while (stmt.step()) {
+        let row = stmt.getAsObject();
         const roomCard = document.createElement('div');
-        roomCard.className = 'room-card';
+        roomCard.className = `room-card room-color-${idx % 5}`;
         roomCard.innerHTML = `
-            <h3>${room.nombre}</h3>
-            <p>ID: ${room.id_habitacion}</p>
-            <p>Planta: ${room.planta}</p>
+            <div class="room-title">${row.nombre}</div>
+            <div class="room-info">ID: ${row.id_habitacion} &nbsp;|&nbsp; Planta: ${row.planta}</div>
         `;
-        roomCard.onclick = () => sqlInput.value = `SELECT * FROM habitaciones_sensores WHERE id_habitacion = ${room.id_habitacion};`;
+        roomCard.onclick = () => sqlInput.value = `SELECT * FROM habitaciones_sensores WHERE id_habitacion = ${row.id_habitacion};`;
         roomGrid.appendChild(roomCard);
-    });
+        idx++;
+    }
+    stmt.free();
 }
 
+// Botones
 document.getElementById('btnEjecutar').addEventListener('click', () => {
     const sql = sqlInput.value.trim();
-    if (sql) {
-        ejecutarSQL(sql);
-    }
+    if (sql) ejecutarSQL(sql);
 });
 document.getElementById('btnInicializar').addEventListener('click', () => inicializarDB());
 document.getElementById('btnBorrarBD').addEventListener('click', () => borrarDB());
@@ -183,7 +164,6 @@ document.getElementById('btnBorrar').addEventListener('click', () => {
     const helpBox = document.querySelector('.help-box');
     if (helpBox) helpBox.remove();
 });
-
 sqlInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && e.ctrlKey) {
         ejecutarSQL(sqlInput.value.trim());
