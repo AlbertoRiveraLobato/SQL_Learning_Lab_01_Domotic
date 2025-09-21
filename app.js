@@ -1,5 +1,5 @@
 // Configuración de versión
-const APP_VERSION = "v25";
+const APP_VERSION = "v26";
 
 let db, ready = false;
 let SQL;
@@ -279,6 +279,26 @@ document.getElementById('btnActualizarVista').addEventListener('click', () => ac
 sqlInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && e.ctrlKey) {
         ejecutarSQL(sqlInput.value.trim());
+    }
+    
+    // Manejar el tabulador para insertar espacios/sangría
+    if (e.key === 'Tab') {
+        e.preventDefault(); // Evitar que el navegador cambie el foco al siguiente elemento
+        
+        // Obtener la posición actual del cursor
+        const start = sqlInput.selectionStart;
+        const end = sqlInput.selectionEnd;
+        
+        // Insertar 4 espacios (o puedes cambiar a '\t' si prefieres tabulador real)
+        const tabString = '    '; // 4 espacios
+        
+        // Reemplazar el texto seleccionado (o insertar en la posición del cursor)
+        sqlInput.value = sqlInput.value.substring(0, start) + 
+                        tabString + 
+                        sqlInput.value.substring(end);
+        
+        // Colocar el cursor después de la sangría insertada
+        sqlInput.selectionStart = sqlInput.selectionEnd = start + tabString.length;
     }
 });
 
