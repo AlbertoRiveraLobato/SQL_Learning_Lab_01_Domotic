@@ -1,4 +1,5 @@
-# SQL Learning Lab DML 01 - Domótica
+# SQL Learning Lab 03 
+# App de Domótica
 
 Esta aplicación es una herramienta didáctica para practicar SQL y aprender conceptos de bases de datos, usando como ejemplo una casa domótica. Los sensores y habitaciones se gestionan en una base de datos relacional **simulada en el navegador** con SQLite (sql.js).
 
